@@ -214,7 +214,7 @@ const P = {
   orange: [255, 167, 38], orangeD: [200, 90, 0],
   lime: [105, 240, 174], red: [255, 82, 82], redD: [160, 20, 20],
   yellow: [255, 215, 64], gold: [255, 200, 40],
-  white: [245, 245, 255],
+  blue: [80, 150, 255], white: [245, 245, 255],
   navy: [10, 12, 28], navy2: [16, 18, 44], deep: [6, 7, 18],
   glass: [140, 160, 255],
 };
@@ -376,6 +376,36 @@ const makePortals = () => {
     cv.ring(cx, cy, 26, 4, P.lime[0], P.lime[1], P.lime[2], 220);
     cv.fillPoly([[cx - 26, cy], [cx - 16, cy - 8], [cx - 16, cy + 8]], 255, 255, 255, 230);
     cv.line(cx, cy, cx - 26, cy, 255, 255, 255, 160, 1);
+  }));
+  out.push(portalBase("portal_cube", P.blue, null, (cv, cx, cy, c) => {
+    cv.ring(cx, cy, 22, 4, 255, 255, 255, 230);
+    cv.fillRRect(cx - 10, cy - 10, 20, 20, 4, 255, 255, 255, 220);
+  }));
+  out.push(portalBase("portal_ship", P.lime, null, (cv, cx, cy, c) => {
+    cv.fillPoly([[cx, cy - 20], [cx - 16, cy + 4], [cx - 6, cy + 4], [cx - 6, cy + 14], [cx + 6, cy + 14], [cx + 6, cy + 4], [cx + 16, cy + 4]], 255, 255, 255, 230);
+    cv.line(cx - 6, cy + 4, cx + 6, cy + 4, c[0], c[1], c[2], 160, 2);
+  }));
+  out.push(portalBase("portal_ball", P.orange, null, (cv, cx, cy, c) => {
+    cv.ring(cx, cy, 20, 4, 255, 255, 255, 230);
+    cv.fillCircle(cx, cy, 6, 255, 255, 255, 220);
+  }));
+  out.push(portalBase("portal_ufo", P.yellow, null, (cv, cx, cy, c) => {
+    cv.fillRRect(cx - 24, cy - 20, 48, 26, 22, 255, 255, 255, 230);
+    cv.fillRRect(cx - 24, cy - 14, 48, 20, 16, c[0], c[1], c[2], 210);
+    cv.fillRect(cx - 24, cy + 4, 48, 12, 255, 255, 255, 220);
+    cv.fillCircle(cx - 8, cy + 8, 3, 40, 40, 60, 220);
+    cv.fillCircle(cx + 8, cy + 8, 3, 40, 40, 60, 220);
+  }));
+  out.push(portalBase("portal_wave", P.magenta, null, (cv, cx, cy, c) => {
+    cv.ringGrad(cx, cy, 26, 4, P.magenta, P.blue, 230);
+    cv.fillPoly([[cx - 14, cy + 16], [cx - 14, cy - 16], [cx + 14, cy + 16], [cx + 14, cy - 16]], 255, 255, 255, 220);
+  }));
+  out.push(C("orb", 96, 96, (cv, x, y) => {
+    const cx = x + 48, cy = y + 48;
+    cv.glow(cx, cy, 54, P.yellow[0], P.yellow[1], P.yellow[2], 1.4);
+    cv.fillCircle(cx, cy, 26, P.yellow[0], P.yellow[1], P.yellow[2]);
+    cv.fillCircle(cx, cy, 18, [255, 240, 170][0], [255, 240, 170][1], [255, 240, 170][2]);
+    cv.fillCircle(cx + 9, cy - 9, 5, 255, 255, 255, 220);
   }));
   return out;
 };

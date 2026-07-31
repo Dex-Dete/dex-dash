@@ -8,8 +8,10 @@ const SOLID_TYPES := ["ground", "pad", "finish"]
 const HAZARD_TYPES := ["spike_up", "spike_down", "spike_left", "spike_right"]
 const PORTAL_TYPES := ["portal_grav_up", "portal_grav_down", "portal_speed",
 	"portal_size", "portal_dash", "portal_teleport", "portal_rotate_cw",
-	"portal_rotate_ccw", "portal_spin"]
+	"portal_rotate_ccw", "portal_spin", "portal_cube", "portal_ship",
+	"portal_wave", "portal_ufo", "portal_ball"]
 const COIN_TYPES := ["coin", "coin_secret"]
+const ORB_TYPES := ["orb"]
 const DECO_TYPES := ["deco_star", "deco_crystal", "deco_orb", "deco_gear"]
 const BOSS_TYPES := ["boss_core", "boss_eye"]
 
@@ -29,6 +31,7 @@ var is_tutorial := false
 var _ground: Dictionary = {}        # "x,y" -> true
 var _hazards: Dictionary = {}       # "x,y" -> type
 var _coins: Dictionary = {}         # "x,y" -> {type, taken}
+var _orbs: Dictionary = {}          # "x,y" -> true
 var _portals: Dictionary = {}       # "x,y" -> obj dict
 var _checkpoints: Dictionary = {}   # "x,y" -> obj dict
 var _pads: Dictionary = {}          # "x,y" -> true
@@ -74,6 +77,8 @@ func add_object(o: Dictionary) -> void:
 		_hazards[key] = t
 	elif t in COIN_TYPES:
 		_coins[key] = {"type": t, "taken": false}
+	elif t in ORB_TYPES:
+		_orbs[key] = true
 	elif t in PORTAL_TYPES:
 		_portals[key] = o
 		if t == "portal_teleport":
@@ -110,6 +115,10 @@ func take_coin(cx: int, cy: int) -> String:
 
 func portal_at(cx: int, cy: int) -> Dictionary:
 	return _portals.get("%d,%d" % [cx, cy], {})
+
+
+func orb_at(cx: int, cy: int) -> bool:
+	return _orbs.has("%d,%d" % [cx, cy])
 
 
 func checkpoint_at(cx: int, cy: int) -> Dictionary:

@@ -200,6 +200,71 @@ static func catalog() -> Array[Dictionary]:
 				_g(ob, 140, 150, GND)
 				_fin(ob, 146, GND)
 	))
+	out.append(_make("modes_1", "Mode Circuit", "normal", "normal", "cyber", 138, 176,
+			[{"start": [-3, -1]}],
+			func(ob: Array) -> void:
+				# --- cube + jump orbs ---
+				_g(ob, -4, 8, GND)
+				_orb(ob, 8, GND - 1)
+				_coin(ob, 9, -3)
+				_g(ob, 11, 18, GND)
+				_sp(ob, 14, GND)
+				_g(ob, 20, 22, GND)
+				_orb(ob, 20, GND - 1)
+				_coin(ob, 20, -5)
+				_g(ob, 24, 30, GND)
+				# --- ship corridor ---
+				_ship(ob, 32, GND - 1)
+				_g(ob, 33, 52, GND)
+				_g(ob, 33, 52, -4)
+				_coin(ob, 38, -2)
+				_sp(ob, 42, GND)
+				_sp(ob, 43, GND)
+				_sp(ob, 48, -4)
+				_coin(ob, 49, -2)
+				_cube(ob, 54, GND - 1)
+				# --- wave corridor ---
+				_wave(ob, 58, GND - 1)
+				_g(ob, 59, 78, GND)
+				_g(ob, 59, 78, -4)
+				_g(ob, 64, 67, -2)
+				_coin(ob, 65, -3)
+				_g(ob, 71, 74, -2)
+				_sec(ob, 72, -3)
+				_cube(ob, 80, GND - 1)
+				_g(ob, 81, 94, GND)
+				# --- ufo hops ---
+				_ufo(ob, 96, GND - 1)
+				_g(ob, 97, 100, GND)
+				_sp(ob, 98, GND)
+				_g(ob, 103, 106, GND)
+				_coin(ob, 105, -2)
+				_sp(ob, 104, GND)
+				_g(ob, 109, 112, GND)
+				_sp(ob, 110, GND)
+				_cube(ob, 114, GND - 1)
+				# --- ball corridor ---
+				_ball(ob, 118, GND - 1)
+				_g(ob, 119, 148, GND)
+				_g(ob, 119, 148, -4)
+				_g(ob, 124, 127, -2)
+				_coin(ob, 125, -3)
+				_g(ob, 132, 135, -2)
+				_sec(ob, 133, -3)
+				_g(ob, 140, 143, -2)
+				_coin(ob, 141, -3)
+				_cube(ob, 150, GND - 1)
+				# --- finale: orbs over spikes ---
+				_g(ob, 151, 176, GND)
+				_sp(ob, 156, GND)
+				_sp(ob, 157, GND)
+				_orb(ob, 158, GND - 1)
+				_sp(ob, 163, GND)
+				_sp(ob, 164, GND)
+				_orb(ob, 165, GND - 1)
+				_coin(ob, 166, -3)
+				_fin(ob, 172, GND)
+	))
 	out.append(_make("hard_1", "Precision", "hard", "hard", "cyber", 142, 180,
 			[{"start": [-3, -1]}],
 			func(ob: Array) -> void:
@@ -896,6 +961,30 @@ static func _rot_cw(ob: Array, x: int, y: int) -> void:
 
 static func _rot_ccw(ob: Array, x: int, y: int) -> void:
 	ob.append({"t": "portal_rotate_ccw", "x": x, "y": y})
+
+
+static func _cube(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "portal_cube", "x": x, "y": y})
+
+
+static func _ship(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "portal_ship", "x": x, "y": y})
+
+
+static func _wave(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "portal_wave", "x": x, "y": y})
+
+
+static func _ufo(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "portal_ufo", "x": x, "y": y})
+
+
+static func _ball(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "portal_ball", "x": x, "y": y})
+
+
+static func _orb(ob: Array, x: int, y: int) -> void:
+	ob.append({"t": "orb", "x": x, "y": y})
 
 
 static func _boss(ob: Array, x: int, y: int, kind: String) -> void:

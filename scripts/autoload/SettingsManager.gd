@@ -28,7 +28,7 @@ var settings: Dictionary = {
 	},
 	"gameplay": {
 		"ghost_mode": true,
-		"auto_retry": false,
+		"auto_retry": true,
 		"shake_on_land": true,
 	},
 	"ui": {
@@ -43,6 +43,7 @@ var settings: Dictionary = {
 	"controls": {
 		"jump": ["key_space", "key_w", "key_up", "gamepad_a"],
 		"pause": ["key_escape", "gamepad_start"],
+		"restart": ["key_r"],
 		"ui_accept": ["key_enter", "key_space", "gamepad_a"],
 		"ui_cancel": ["key_escape", "gamepad_b"],
 		"ui_left": ["key_left", "key_a", "gamepad_dpad_left"],

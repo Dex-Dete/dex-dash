@@ -2,6 +2,26 @@
 
 All notable changes to DEX DASH.
 
+## [0.2.0] - 2026-07-31
+
+### Added
+- GD-style control modes: **ship** (hold to thrust), **wave** (hold up / release
+  down, dies on any surface), **UFO** (tap = mid-air hop), **ball** (tap flips
+  gravity, dies on any surface) — switched by five new portal types
+- **Jump orbs** — tap to bounce in any form (works in every mode, like GD)
+- New campaign level **"Mode Circuit"** (`modes_1`) teaching all five forms
+- **Auto-retry**: instant restart on death, default ON (toggle in Settings)
+- Replay format v2 (`DXR2`): records jump-hold state so ship/wave/ufo/ball
+  ghost replays work
+
+### Fixed
+- Critical collision bug: the player died on landing (hitbox overlapped the
+  ground row before snapping). Landing, wall and ceiling contact are now
+  resolved correctly — the game is actually playable
+- Jump orbs and mode portals now trigger at the body edge (3-cell sweep),
+  matching GD overlap-trigger feel
+- Cube-only variable jump height (hold = higher); UFO/ball are tap-only
+
 ## [0.1.0] - 2026-07-31
 
 ### Added

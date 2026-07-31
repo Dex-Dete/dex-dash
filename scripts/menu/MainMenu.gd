@@ -62,7 +62,7 @@ func _setup_ui() -> void:
 		_add_button(Localization.t(item[0]), item[1])
 
 	var version := Label.new()
-	version.text = "v0.1.0"
+	version.text = "v0.2.0"
 	version.add_theme_font_override("font", Assets.font_body)
 	version.add_theme_font_size_override("font_size", 12)
 	version.add_theme_color_override("font_color", Color(0.4, 0.42, 0.55))

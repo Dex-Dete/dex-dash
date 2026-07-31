@@ -25,6 +25,12 @@ const TOOLS := {
 	"portal_rotate_ccw": {"name": "Rotate CCW", "hint": ""},
 	"portal_spin": {"name": "Spin Portal", "hint": ""},
 	"portal_teleport": {"name": "Teleport Pair", "hint": ""},
+	"portal_cube": {"name": "Cube Portal", "hint": ""},
+	"portal_ship": {"name": "Ship Portal", "hint": ""},
+	"portal_wave": {"name": "Wave Portal", "hint": ""},
+	"portal_ufo": {"name": "UFO Portal", "hint": ""},
+	"portal_ball": {"name": "Ball Portal", "hint": ""},
+	"orb": {"name": "Jump Orb", "hint": ""},
 	"start": {"name": "Start Point", "hint": ""},
 	"erase": {"name": "Erase", "hint": ""},
 }
@@ -36,7 +42,9 @@ const TOOL_COLORS := {
 	"finish": Color("69f0ae"), "portal_grav_up": Color("7c4dff"), "portal_grav_down": Color("7c4dff"),
 	"portal_speed": Color("ff2fd6"), "portal_size": Color("ff2fd6"), "portal_dash": Color("ff2fd6"),
 	"portal_rotate_cw": Color("ffa726"), "portal_rotate_ccw": Color("ffa726"), "portal_spin": Color("ffa726"),
-	"portal_teleport": Color("ffa726"), "start": Color("00e5ff"), "erase": Color("ff5252"),
+	"portal_teleport": Color("ffa726"), "portal_cube": Color("5096ff"), "portal_ship": Color("69f0ae"),
+	"portal_wave": Color("ff2fd6"), "portal_ufo": Color("ffd740"), "portal_ball": Color("ffa726"),
+	"orb": Color("ffd740"), "start": Color("00e5ff"), "erase": Color("ff5252"),
 }
 
 const VIEW_ORIGIN := Vector2(232, 64)
@@ -117,7 +125,7 @@ class GridView:
 			elif t == "pad":
 				draw_rect(Rect2(x * CELL + 4, y * CELL + 4, CELL - 8, CELL * 0.4), c)
 				draw_rect(Rect2(x * CELL + 6, y * CELL + 4 - 6, CELL - 12, 6), c)
-			elif t in ["coin", "coin_secret"]:
+			elif t in ["coin", "coin_secret", "orb"]:
 				draw_circle(Vector2(x * CELL + CELL / 2.0, y * CELL + CELL / 2.0), 12.0, c)
 			elif t == "checkpoint":
 				draw_rect(Rect2(x * CELL + 8, y * CELL + 8, 6, CELL - 16), c)
@@ -126,7 +134,7 @@ class GridView:
 				draw_rect(Rect2(x * CELL + 8, y * CELL + 8, CELL - 16, CELL - 16), c, true)
 			elif t.begins_with("portal"):
 				draw_rect(Rect2(x * CELL + 4, y * CELL - CELL + 4, CELL - 8, CELL * 2 - 8), Color(c.r, c.g, c.b, 0.35))
-				var label := "G" if t.ends_with("up") else ("V" if t.ends_with("down") else ("S" if t.contains("speed") else ("Z" if t.contains("size") else ("D" if t.contains("dash") else ("T" if t.contains("teleport") else "R")))))
+				var label := "G" if t.ends_with("up") else ("V" if t.ends_with("down") else ("S" if t.contains("speed") else ("Z" if t.contains("size") else ("D" if t.contains("dash") else ("T" if t.contains("teleport") else ("C" if t.contains("cube") else ("F" if t.contains("ship") else ("W" if t.contains("wave") else ("U" if t.contains("ufo") else ("B" if t.contains("ball") else "R"))))))))))
 				var f: Font = editor.get_font()
 				draw_string(f, Vector2(x * CELL + 10, y * CELL + 6), label, HORIZONTAL_ALIGNMENT_LEFT, CELL - 20, 22, c)
 				if t.contains("teleport"):

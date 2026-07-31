@@ -20,6 +20,11 @@ const COYOTE_TICKS := 4
 const BUFFER_TICKS := 6
 const DASH_TIME := 0.75
 const DASH_FACTOR := 1.9
+const SHIP_THRUST := 42.0      # net upward accel while held: SHIP_THRUST - GRAVITY
+const SHIP_MAX_RISE := 11.5
+const WAVE_SPEED := 9.5
+const UFO_VEL := 7.8
+const ORB_VEL := 10.5
 
 var _lv: LevelData
 var _mode := GameFlow.Mode.NORMAL
@@ -34,6 +39,7 @@ var _pos := Vector2.ZERO        # cells, center
 var _vy := 0.0                  # scalar velocity along gravity axis
 var _grav := Vector2.DOWN       # unit vector (1,0),(0,1),(-1,0),(0,-1)
 var _fwd := Vector2.RIGHT       # unit vector, rotated by rotation portals
+var _ctrl := "cube"             # control mode: cube, ship, wave, ufo, ball
 var _size := 1.0
 var _spd_tier := 1
 var _grounded := false
@@ -72,6 +78,7 @@ var _ghost_pos := Vector2.ZERO
 var _ghost_vy := 0.0
 var _ghost_grav := Vector2.DOWN
 var _ghost_fwd := Vector2.RIGHT
+var _ghost_ctrl := "cube"
 var _ghost_size := 1.0
 var _ghost_spd_tier := 1
 var _ghost_grounded := false
@@ -100,6 +107,7 @@ var _toasts: Control
 var _win_overlay: Control
 var _pause_overlay: Control
 var _death_overlay: Control
+var _death_label: Label
 var _shade: ColorRect
 var _toast_queue: Array = []
 var _toast_active := false
@@ -227,9 +235,16 @@ func _process(dt: float) -> void:
 		pass
 	elif InputActions.just_pressed_any(["pause", "ui_cancel"]):
 		_toggle_pause()
+	if InputActions.just_pressed("restart") and not _win and not _win_overlay:
+		_restart()
 	if not _alive and not _win:
 		_dead_timer -= dt
-		if _dead_timer <= 0.0:
+		if bool(SettingsManager.get_gameplay("auto_retry")):
+			if _dead_timer <= 0.0:
+				_restart()
+			elif _dead_timer < 0.55 and InputActions.just_pressed("jump"):
+				_restart()
+		elif InputActions.just_pressed_any(["jump", "ui_accept"]):
 			_restart()
 	if _dash > 0.0 and _alive:
 		_dash -= dt
@@ -255,9 +270,10 @@ func _sim_tick() -> void:
 		_tick += 1
 		return
 	var jp := InputActions.just_pressed("jump")
+	var jump_held := InputActions.pressed("jump")
 	if jp:
 		_buffer = BUFFER_TICKS
-	_replay.record_tick(jp)
+	_replay.record_tick(jump_held)
 	if _buffer > 0:
 		_buffer -= 1
 	if _coyote > 0:
@@ -267,10 +283,27 @@ func _sim_tick() -> void:
 	if grounded_prev and not _cell_solid(support):
 		_grounded = false
 		_coyote = COYOTE_TICKS
-	var jump_held := InputActions.pressed("jump")
-	if _buffer > 0 and (_grounded or _coyote > 0):
+	if jp:
+		if _ctrl == "ball":
+			# ball mode: tap flips gravity (roll on any surface = death)
+			_grav = -_grav
+			_vy = -_vy
+			_grounded = false
+			AudioManager.play_sfx("gravity", 0.9, 1.1)
+			_effects.ring(_player_view.position, Color("ffa726"), 70.0, 0.35)
+			_player_view._spin += PI
+		elif _ctrl == "ufo":
+			# ufo mode: tap = short hop, works mid-air
+			_vy = -UFO_VEL
+			_grounded = false
+			_jumps += 1
+			StatsManager.add_jump()
+			AudioManager.play_sfx("jump", 0.8, randf_range(1.05, 1.2))
+			_player_view.on_jump()
+			_effects.glow_burst(_player_view.position + _grav * 12.0, Color(0.8, 0.9, 1.0), 4, 110.0)
+	if _ctrl == "cube" and _buffer > 0 and (_grounded or _coyote > 0):
 		_do_jump()
-	if _grounded:
+	if _grounded and (_ctrl == "cube" or _ctrl == "ufo"):
 		var pad_cell := support
 		if _lv.pad_at(pad_cell.x, pad_cell.y):
 			_vy = -JUMP_VEL * 1.4
@@ -279,24 +312,37 @@ func _sim_tick() -> void:
 			StatsManager.add_jump()
 			AudioManager.play_sfx("jump_big", 0.9, 1.0)
 			_effects.ring(_player_view.position, ThemeManager.current["accent"], 60.0, 0.3)
-	var g_scale := 1.0
-	if jump_held and _vy * 1.0 < 0.0:
-		g_scale = 0.72
+	match _ctrl:
+		"wave":
+			_vy = -WAVE_SPEED if jump_held else WAVE_SPEED
+		"ship":
+			_vy += (GRAVITY - (SHIP_THRUST if jump_held else 0.0)) * TICK
+			_vy = clampf(_vy, -SHIP_MAX_RISE, 20.0)
+		_:
+			var g_scale := 1.0
+			if _ctrl == "cube" and jump_held and _vy < 0.0:
+				g_scale = 0.72
+			_vy += GRAVITY * g_scale * TICK
+			_vy = minf(_vy, 18.0)
 	var speed := _current_speed()
 	_pos += _fwd * speed * TICK
-	_vy += GRAVITY * g_scale * TICK
-	_vy = minf(_vy, 18.0)
 	_pos += _grav * _vy * TICK
 	_check_overlap_deaths()
 	if not _alive:
 		return
-	if _snap_to_ground():
-		_grounded = true
-		_vy = 0.0
+	if _ctrl == "wave" or _ctrl == "ball":
+		# these forms die on any surface contact
+		if _snap_to_ground():
+			_die("crash")
+			return
 	else:
-		_grounded = false
+		if _snap_to_ground():
+			_grounded = true
+			_vy = 0.0
+		else:
+			_grounded = false
 	_check_coin()
-	_check_objects()
+	_check_objects(jp)
 	_tick += 1
 	if _ghost_enabled and _ghost_alive:
 		_ghost_tick()
@@ -341,15 +387,17 @@ func _snap_to_ground() -> bool:
 	if not _cell_solid(support):
 		return false
 	if _vy > -0.001:
-		# touch: align body edge with the solid cell boundary
-		var perp := _grav.orthogonal()
-		var cell_center := Vector2(support) + Vector2(0.5, 0.5)
-		_pos = cell_center - _grav * (_size / 2.0 + 0.5) + _grav * 0.0
-		# precise: body edge should sit at the cell's inner boundary
-		_pos = cell_center - _grav * (_size / 2.0)
-		# also shift the perpendicular offset so the corner is valid
-		var off := (Vector2(support) + Vector2(0.5, 0.5)) + _grav * (-0.5)
-		_pos = _pos
+		# rest ON TOP of the support cell: align only the gravity axis so the
+		# body edge sits on the cell's gravity-facing boundary; the
+		# perpendicular coordinate is left free (no snapping to column centers).
+		if _grav.y < 0.0:
+			_pos.y = support.y + 1.0 + _size / 2.0
+		elif _grav.y > 0.0:
+			_pos.y = support.y - _size / 2.0
+		elif _grav.x > 0.0:
+			_pos.x = support.x - _size / 2.0
+		else:
+			_pos.x = support.x + 1.0 + _size / 2.0
 		_vy = 0.0
 		_player_view.on_land()
 		_effects.spark(_player_view.position - _grav * 12.0, _grav * 40.0, Color(1, 1, 1, 0.7), 0.25, 3.0)
@@ -358,7 +406,7 @@ func _snap_to_ground() -> bool:
 
 
 func _hitbox() -> Rect2:
-	var half := _size / 2.0 * 0.85
+	var half := _size / 2.0
 	return Rect2(_pos.x - half, _pos.y - half, half * 2, half * 2)
 
 
@@ -368,9 +416,13 @@ func _check_overlap_deaths() -> void:
 	var x1 := floori(hb.end.x - 0.001)
 	var y0 := floori(hb.position.y)
 	var y1 := floori(hb.end.y - 0.001)
+	var support := _support_cell()
 	for cy in range(y0, y1 + 1):
 		for cx in range(x0, x1 + 1):
-			if _lv.solid_at(cx, cy):
+			# the surface the body rests on / approaches is contact (the snap
+			# handles it), never a crush; hazards still apply there.
+			var is_support := cy == support.y if _grav.y != 0.0 else cx == support.x
+			if not is_support and _lv.solid_at(cx, cy):
 				_die("crash")
 				return
 			var hz := _lv.hazard_at(cx, cy)
@@ -423,22 +475,44 @@ func _check_coin() -> void:
 		_show_toast("+1", Color(1, 0.8, 0.2), 0.8)
 
 
-func _check_objects() -> void:
+func _check_objects(jp: bool) -> void:
 	var cx := floori(_pos.x)
 	var cy := floori(_pos.y)
-	if not _lv.checkpoint_at(cx, cy).is_empty() and not _has_checkpoint:
-		_has_checkpoint = true
-		_checkpoint = Vector2(cx + 0.5, cy + 0.5)
-		_checkpoint_grav = _grav
-		AudioManager.play_sfx("checkpoint", 0.9)
-		_effects.ring(_player_view.position, Color(0.6, 0.9, 1.0), 70.0, 0.4)
-		_show_toast(Localization.t("checkpoint_reached"), Color(0.6, 0.9, 1.0), 1.2)
-	if floori(_lv.finish_pos().x) == cx and floori(_lv.finish_pos().y) == cy:
+	# trigger checks span the body height (cells cy-1..cy+1) so objects placed
+	# one cell above/below the player's center (e.g. portals at GND-1) fire
+	# while running on the ground, like GD overlap-triggers.
+	for dy in range(-1, 2):
+		var yy := cy + dy
+		if _lv.orb_at(cx, yy) and jp:
+			_vy = -ORB_VEL
+			_grounded = false
+			_coyote = 0
+			_jumps += 1
+			StatsManager.add_jump()
+			AudioManager.play_sfx("jump", 0.8, 1.15)
+			_player_view.on_jump()
+			_effects.glow_burst(_player_view.position + _grav * 12.0, Color(1, 0.9, 0.4), 5, 120.0)
+			return
+	for dy in range(-1, 2):
+		var yy := cy + dy
+		if not _lv.checkpoint_at(cx, yy).is_empty() and not _has_checkpoint:
+			_has_checkpoint = true
+			_checkpoint = Vector2(cx + 0.5, yy + 0.5)
+			_checkpoint_grav = _grav
+			AudioManager.play_sfx("checkpoint", 0.9)
+			_effects.ring(_player_view.position, Color(0.6, 0.9, 1.0), 70.0, 0.4)
+			_show_toast(Localization.t("checkpoint_reached"), Color(0.6, 0.9, 1.0), 1.2)
+			break
+	var fp: Vector2i = _lv.finish_pos()
+	if floori(fp.x) == cx and cy >= fp.y - 1 and cy <= fp.y + 1:
 		_win_level()
 		return
-	var portal: Dictionary = _lv.portal_at(cx, cy)
-	if not portal.is_empty():
-		_apply_portal(portal)
+	for dy in range(-1, 2):
+		var yy := cy + dy
+		var portal: Dictionary = _lv.portal_at(cx, yy)
+		if not portal.is_empty():
+			_apply_portal(portal)
+			return
 
 
 func _apply_portal(portal: Dictionary) -> void:
@@ -490,6 +564,16 @@ func _apply_portal(portal: Dictionary) -> void:
 			_rotate_world(dir)
 		"portal_spin":
 			_player_view._spin += PI * 2.0
+		"portal_cube", "portal_ship", "portal_wave", "portal_ufo", "portal_ball":
+			_set_ctrl(t.trim_prefix("portal_"))
+
+
+func _set_ctrl(c: String) -> void:
+	_ctrl = c
+	_player_view.mode = c
+	AudioManager.play_sfx("portal", 0.9, 1.05)
+	_effects.ring(_player_view.position, Color("69f0ae"), 70.0, 0.35)
+	_effects.glow_burst(_player_view.position, Color("69f0ae"), 8, 200.0)
 
 
 func _rotate_world(dir: int) -> void:
@@ -521,7 +605,10 @@ func _die(cause: String) -> void:
 	_effects.burst(_player_view.position, Color(1, 1, 1), 6, 220.0)
 	_player_view.on_death()
 	_ghost_view.visible = false
-	_dead_timer = 1.1
+	var auto_retry := bool(SettingsManager.get_gameplay("auto_retry"))
+	_dead_timer = 0.8 if auto_retry else 1.1
+	if _death_label:
+		_death_label.text = "" if auto_retry else Localization.t("tap_to_restart")
 	if not _practice:
 		Engine.time_scale = 0.25
 		var tw := create_tween()
@@ -545,6 +632,9 @@ func _restart() -> void:
 		_pos = _spawn_pos
 		_grav = Vector2.DOWN
 	_fwd = Vector2.RIGHT
+	_ctrl = "cube"
+	_ghost_ctrl = "cube"
+	_player_view.mode = "cube"
 	_size = 1.0
 	_spd_tier = 1
 	_vy = 0.0
@@ -648,17 +738,49 @@ func _ghost_tick() -> void:
 		_ghost_alive = false
 		_ghost_view.visible = false
 		return
-	if _ghost_playback.jump_this_tick() and _ghost_grounded:
-		_ghost_vy = -JUMP_VEL
-		_ghost_grounded = false
+	var held := _ghost_playback.held_now()
+	var jp := _ghost_playback.pressed_this_tick()
+	if jp:
+		var gcx := floori(_ghost_pos.x)
+		var gcy := floori(_ghost_pos.y)
+		var orb_near := false
+		for dy in range(-1, 2):
+			if _lv.orb_at(gcx, gcy + dy):
+				orb_near = true
+				break
+		if orb_near:
+			_ghost_vy = -ORB_VEL
+			_ghost_grounded = false
+		elif _ghost_ctrl == "ball":
+			_ghost_grav = -_ghost_grav
+			_ghost_vy = -_ghost_vy
+			_ghost_grounded = false
+		elif _ghost_ctrl == "ufo":
+			_ghost_vy = -UFO_VEL
+			_ghost_grounded = false
+		elif _ghost_ctrl == "cube" and _ghost_grounded:
+			_ghost_vy = -JUMP_VEL
+			_ghost_grounded = false
+	match _ghost_ctrl:
+		"wave":
+			_ghost_vy = -WAVE_SPEED if held else WAVE_SPEED
+		"ship":
+			_ghost_vy += (GRAVITY - (SHIP_THRUST if held else 0.0)) * TICK
+			_ghost_vy = clampf(_ghost_vy, -SHIP_MAX_RISE, 20.0)
+		_:
+			_ghost_vy += GRAVITY * TICK
+			_ghost_vy = minf(_ghost_vy, 18.0)
 	var f: float = SPEED_FACTORS[clampi(_ghost_spd_tier - 1, 0, 3)]
 	_ghost_pos += _ghost_fwd * BASE_SPEED * f * (DASH_FACTOR if _ghost_dash > 0.0 else 1.0) * TICK
-	_ghost_vy += GRAVITY * TICK
-	_ghost_vy = minf(_ghost_vy, 18.0)
 	_ghost_pos += _ghost_grav * _ghost_vy * TICK
 	var edge := _ghost_pos + _ghost_grav * (_ghost_size / 2.0 + 0.02)
 	var support := Vector2i(floori(edge.x), floori(edge.y))
-	if _lv.solid_at(support.x, support.y) and _ghost_vy > -0.001:
+	if _ghost_ctrl == "wave" or _ghost_ctrl == "ball":
+		if _lv.solid_at(support.x, support.y) and _ghost_vy > -0.001:
+			_ghost_alive = false
+			_ghost_view.visible = false
+			return
+	elif _lv.solid_at(support.x, support.y) and _ghost_vy > -0.001:
 		var cell_center := Vector2(support) + Vector2(0.5, 0.5)
 		_ghost_pos = cell_center - _ghost_grav * (_ghost_size / 2.0)
 		_ghost_vy = 0.0
@@ -690,6 +812,8 @@ func _ghost_tick() -> void:
 			"portal_rotate_ccw":
 				_ghost_grav = Vector2(-_ghost_grav.y, _ghost_grav.x)
 				_ghost_fwd = Vector2(-_ghost_fwd.y, _ghost_fwd.x)
+			"portal_cube", "portal_ship", "portal_wave", "portal_ufo", "portal_ball":
+				_ghost_ctrl = str(portal.t).trim_prefix("portal_")
 	if _ghost_dash > 0.0:
 		_ghost_dash -= TICK
 	if floori(_lv.finish_pos().x) == cx and floori(_lv.finish_pos().y) == cy:
@@ -791,10 +915,12 @@ func _build_hud() -> void:
 	var death_label := Label.new()
 	death_label.text = ""
 	death_label.set_anchors_preset(Control.PRESET_CENTER)
-	death_label.add_theme_font_override("font", Assets.font_pixel)
-	death_label.add_theme_font_size_override("font_size", 26)
-	death_label.add_theme_color_override("font_color", Color(1, 0.35, 0.35))
+	death_label.position.y += 60
+	death_label.add_theme_font_override("font", Assets.font_body)
+	death_label.add_theme_font_size_override("font_size", 22)
+	death_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0, 0.85))
 	_death_overlay.add_child(death_label)
+	_death_label = death_label
 	_pause_overlay = Control.new()
 	_pause_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pause_overlay.visible = false

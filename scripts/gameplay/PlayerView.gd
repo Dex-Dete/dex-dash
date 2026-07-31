@@ -9,6 +9,7 @@ var color := Color("00e5ff")
 var trail_color := Color("00e5ff")
 var ghost := false
 var size := 1.0
+var mode := "cube"
 var rot := 0.0
 var _target_rot := 0.0
 var _land_timer := 0.0
@@ -39,6 +40,13 @@ func _process(dt: float) -> void:
 		_land_timer -= dt
 		if _land_timer <= 0.0:
 			_squash = 1.0
+	match mode:
+		"ship":
+			_spin = fmod(_spin + dt * 1.6, TAU)
+		"wave":
+			_spin = fmod(_spin + dt * 7.0, TAU)
+		"ufo":
+			pass
 	queue_redraw()
 
 

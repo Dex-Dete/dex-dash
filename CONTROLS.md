@@ -9,7 +9,15 @@
 | Restart level | R |
 | Auto-retry (next run) | R during death overlay |
 
-Hold the jump key to jump higher. Release early for a short hop.
+Controls depend on your current form:
+
+- **Cube** — tap to jump. Hold to jump higher (release early for a short hop).
+- **Ship** — hold to thrust upward, release to fall.
+- **Wave** — hold to move toward the ceiling, release to fall. Touches anything
+  and you're done.
+- **UFO** — tap for a short mid-air hop.
+- **Ball** — tap to flip gravity. Touches any surface and you're done.
+- **Jump orbs** — tap while touching one to bounce, in any form.
 
 ## Menus
 

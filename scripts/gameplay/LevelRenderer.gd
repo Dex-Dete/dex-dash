@@ -77,6 +77,11 @@ func _draw() -> void:
 				var ox: float = px + CELL / 2.0 - w / 2.0
 				var bob := sin(time * 2.0 + x) * 4.0
 				draw_texture_rect_region(tex, Rect2(ox, py + bob, w, CELL), r)
+			"orb":
+				# jump orb: pulsing yellow sphere (GD orb)
+				var pulse := 1.0 + 0.15 * sin(time * 6.0 + x * 0.7)
+				var os := CELL * 0.55 * pulse
+				draw_texture_rect_region(tex, Rect2(px + CELL / 2.0 - os / 2.0, py + CELL / 2.0 - os / 2.0, os, os), _g["orb"])
 			"checkpoint":
 				draw_texture_rect_region(tex, Rect2(px, py - CELL * 0.5, CELL, CELL * 1.5), _g["finish"], Color(0.6, 0.9, 1.0, 0.9))
 			"finish":

@@ -46,7 +46,7 @@ const TOKENS := {
 	"mouse_right": ["mouse", 2],
 }
 
-const ACTIONS := ["jump", "pause", "ui_accept", "ui_cancel", "ui_left", "ui_right", "ui_up", "ui_down"]
+const ACTIONS := ["jump", "pause", "restart", "ui_accept", "ui_cancel", "ui_left", "ui_right", "ui_up", "ui_down"]
 
 
 func _ready() -> void:

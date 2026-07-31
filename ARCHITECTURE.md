@@ -35,15 +35,26 @@ itself never moves, which keeps rotated sections coherent and replay-safe.
 
 Movement is `forward * speed + gravity * vy` per tick, with speed tiers
 (1.0 / 1.18 / 1.42 / 1.73), coyote time (4 ticks), jump buffering (6 ticks),
-and forgiving 0.85x collision hitboxes.
+and full 1.0x collision hitboxes: the body dies on any solid overlap except
+the support row/column it is landing on (the snap resolves contact), so
+landings are safe while walls, ceilings and steps crush — GD-style.
+
+**Control forms.** The player's `_ctrl` is one of `cube` (tap jump, hold for
+higher), `ship` (hold = thrust against gravity), `wave` (hold = accelerate
+toward the ceiling, dies on any surface), `ufo` (tap = mid-air hop) and `ball`
+(tap = flip gravity, dies on any surface). Mode portals switch forms; jump
+orbs give a tap-bounce in every form. Ghost replays (DXR2) record the held
+state per tick so hold-based forms replay exactly.
 
 - `LevelData` — data model, collision/index grids, validation, JSON I/O
-- `LevelCatalog` — the 17 campaign levels, defined with compact design helpers
+- `LevelCatalog` — the 18 campaign levels, defined with compact design helpers
 - `LevelRenderer` — batched atlas drawing with view culling (two passes)
 - `BackgroundFX` — parallax layers, beat pulse
 - `EffectsFX` — pooled particles and rings
 - `PlayerView` / `BossView` / `CameraRig` — visuals
-- `ReplayRecorder` — bit-packed DXR1 replay encoding with ghost playback
+- `ReplayRecorder` — bit-packed DXR2 replay encoding with ghost playback
+- `tools/mode_test.gd` — headless regression harness for forms, portals, orbs
+  and collision (`godot --headless res://tools/mode_test.tscn`)
 
 ## Menus (scripts/menu/)
 
