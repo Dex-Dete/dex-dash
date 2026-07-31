@@ -1,0 +1,11 @@
+{
+  "name": "dex-dash-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Procedural asset generation tools for DEX DASH (textures + audio). All assets are original, generated from code.",
+  "scripts": {
+    "gen:all": "node tools/gen-all.js",
+    "gen:textures": "node tools/gen-textures.js",
+    "gen:audio": "node tools/gen-audio.js"
+  }
+}
