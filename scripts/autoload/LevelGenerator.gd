@@ -70,6 +70,35 @@ static func chunk_width(chunk: Array) -> int:
 	return w
 
 
+static func build_endless() -> Dictionary:
+	# Infinite-style level: a long run of chunks with rising difficulty.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(Time.get_unix_time_from_system())
+	var tiers := ["easy", "normal", "hard", "harder", "insane", "extreme"]
+	var chunk_count := 140
+	var objs: Array = []
+	var x := -2
+	for i in chunk_count:
+		var diff: String = tiers[mini(i / 22, tiers.size() - 1)]
+		var kinds := ["flat", "gap", "spikes", "steps", "stair", "pad", "coin_row"]
+		if i > 30:
+			kinds.append("portal_grav")
+		if i > 55:
+			kinds.append("portal_speed")
+		var t: String = kinds[rng.randi_range(0, kinds.size() - 1)]
+		var chunk := make_chunk(t, diff, rng)
+		for o in chunk:
+			var copy: Dictionary = o.duplicate()
+			copy["x"] = int(copy["x"]) + x
+			objs.append(copy)
+		x += chunk_width(chunk)
+	return {
+		"id": "endless", "name": "Endless Circuit", "difficulty": "hard",
+		"music": "endless", "theme": "cyber", "bpm": 130,
+		"length": x, "objects": objs, "start": {"x": -2, "y": 0},
+	}
+
+
 static func _out_ground(out: Array, x: int, w: int, y: int) -> void:
 	for i in w:
 		out.append({"t": "ground", "x": x + i, "y": y})

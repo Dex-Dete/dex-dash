@@ -78,8 +78,6 @@ func _add_button(text: String, key: String) -> void:
 	b.custom_minimum_size = Vector2(320, 44)
 	b.add_theme_font_override("font", Assets.font_body)
 	b.add_theme_font_size_override("font_size", 20)
-	var enabled := ["play", "quit"].has(key)
-	b.disabled = not enabled
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.pressed.connect(_on_pressed.bind(key))
 	_vbox.add_child(b)
@@ -90,5 +88,24 @@ func _on_pressed(key: String) -> void:
 	match key:
 		"play":
 			GameFlow.goto_level_select()
+		"story":
+			GameFlow.goto_story()
+		"endless":
+			GameFlow.goto_endless()
+		"daily":
+			GameFlow.goto_daily()
+		"custom":
+			GameFlow.goto_custom()
+		"editor":
+			GameFlow.current_level_data = {}
+			GameFlow.goto_editor()
+		"settings":
+			GameFlow.change_scene("res://scenes/menu/SettingsMenu.tscn")
+		"stats":
+			GameFlow.change_scene("res://scenes/menu/StatsMenu.tscn")
+		"achievements":
+			GameFlow.change_scene("res://scenes/menu/AchievementsMenu.tscn")
+		"icons":
+			GameFlow.change_scene("res://scenes/menu/IconsMenu.tscn")
 		"quit":
 			get_tree().quit()
