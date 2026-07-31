@@ -13,6 +13,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Assets="*res://scripts/autoload/Assets.gd"
 AudioManager="*res://scripts/autoload/AudioManager.gd"
 SettingsManager="*res://scripts/autoload/SettingsManager.gd"
 SaveManager="*res://scripts/autoload/SaveManager.gd"
