@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.png binary
+*.wav binary
+*.ttf binary
+*.godot text
+*.gd text
+*.tscn text
+*.tres text
+*.json text
+*.md text
